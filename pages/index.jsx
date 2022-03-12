@@ -1,9 +1,13 @@
 import { useEffect, useState } from 'react'
 import Head from 'next/head'
+import { ethers } from 'ethers'
+import myEpicNft from '../utils/MyEpicNFT.json'
 
 const Home = () => {
   const [hasMetamask, setHasMetamask] = useState(false)
   const [currentAccount, setCurrentAccount] = useState('')
+  const [isMining, setIsMining] = useState(false)
+  const [trxAddress, setTrxAddress] = useState('')
 
   useEffect(() => {
     checkIfWalletIsConnected()
@@ -50,7 +54,35 @@ const Home = () => {
   // User have Metamask installed.
   const renderNotConnectedContainer = () => {
     if (currentAccount.length > 0) {
-      return <p className="text-green-500">You are logged in ! 🎉</p>
+      return (
+        <div>
+          <p className="text-green-500">You are logged in ! 🎉</p>
+          {isMining ? (
+            <p className="mt-5 text-2xl">
+              The transaction is being mined, please wait...
+            </p>
+          ) : trxAddress.length > 0 ? (
+            <div>
+              <h2 className="mt-5 text-3xl font-bold">
+                Congratulation, your NFT has been mined !
+              </h2>
+              <p className="mt-5">Check your transaction here :</p>
+              <p className="mt-3">
+                <a className="text-blue-500" href={trxAddress} target="_blank">
+                  {trxAddress}
+                </a>
+              </p>
+            </div>
+          ) : (
+            <button
+              onClick={() => askContractToMintNft()}
+              className="mt-5 rounded bg-green-500 py-2 px-4 font-bold text-white hover:bg-green-700"
+            >
+              Mint a Lorem Ipsum NFT 🔥
+            </button>
+          )}
+        </div>
+      )
     } else {
       return (
         <button
@@ -75,6 +107,40 @@ const Home = () => {
         </button>
       </div>
     )
+  }
+
+  const askContractToMintNft = async () => {
+    const CONTRACT_ADDRESS = '0xB98115d26883Fd4640A931A293B44Bb980b28e9C'
+
+    try {
+      const { ethereum } = window
+
+      if (ethereum) {
+        const provider = new ethers.providers.Web3Provider(ethereum)
+        const signer = provider.getSigner()
+        const connectedContract = new ethers.Contract(
+          CONTRACT_ADDRESS,
+          myEpicNft.abi,
+          signer
+        )
+
+        console.log('Going to pop wallet now to pay gas...')
+        let nftTxn = await connectedContract.makeAnEpicNFT()
+
+        console.log('Mining...please wait.')
+        setIsMining(true)
+        await nftTxn.wait()
+        setIsMining(false)
+        setTrxAddress(`https://rinkeby.etherscan.io/tx/${nftTxn.hash}`)
+        console.log(
+          `Mined, see transaction: https://rinkeby.etherscan.io/tx/${nftTxn.hash}`
+        )
+      } else {
+        console.log("Ethereum object doesn't exist!")
+      }
+    } catch (error) {
+      console.log(error)
+    }
   }
 
   return (
@@ -102,7 +168,7 @@ const Home = () => {
           target="_blank"
           rel="noopener noreferrer"
         >
-          Epic NFT project.
+          NFT project
         </a>
       </footer>
     </div>
