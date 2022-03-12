@@ -27,6 +27,7 @@ const Home = () => {
         const account = accounts[0]
         console.log('Found an authorized account:', account)
         setCurrentAccount(account)
+        setupEventListener()
       } else {
         console.log('No authorized account found')
       }
@@ -46,6 +47,8 @@ const Home = () => {
 
       console.log('Connected', accounts[0])
       setCurrentAccount(accounts[0])
+
+      setupEventListener()
     } catch (error) {
       console.log(error)
     }
@@ -110,7 +113,7 @@ const Home = () => {
   }
 
   const askContractToMintNft = async () => {
-    const CONTRACT_ADDRESS = '0xB98115d26883Fd4640A931A293B44Bb980b28e9C'
+    const CONTRACT_ADDRESS = '0x13f664911180f50e9137a4e5d5E0b2b84C656a3F'
 
     try {
       const { ethereum } = window
@@ -135,6 +138,41 @@ const Home = () => {
         console.log(
           `Mined, see transaction: https://rinkeby.etherscan.io/tx/${nftTxn.hash}`
         )
+      } else {
+        console.log("Ethereum object doesn't exist!")
+      }
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
+  // TODO: FIXME
+  const setupEventListener = async () => {
+    // Most of this looks the same as our function askContractToMintNft
+    try {
+      const { ethereum } = window
+
+      if (ethereum) {
+        // Same stuff again
+        const provider = new ethers.providers.Web3Provider(ethereum)
+        const signer = provider.getSigner()
+        const connectedContract = new ethers.Contract(
+          CONTRACT_ADDRESS,
+          myEpicNft.abi,
+          signer
+        )
+
+        // THIS IS THE MAGIC SAUCE.
+        // This will essentially "capture" our event when our contract throws it.
+        // If you're familiar with webhooks, it's very similar to that!
+        connectedContract.on('NewEpicNFTMinted', (from, tokenId) => {
+          console.log(from, tokenId.toNumber())
+          alert(
+            `Hey there! We've minted your NFT and sent it to your wallet. It may be blank right now. It can take a max of 10 min to show up on OpenSea. Here's the link: https://testnets.opensea.io/assets/${CONTRACT_ADDRESS}/${tokenId.toNumber()}`
+          )
+        })
+
+        console.log('Setup event listener!')
       } else {
         console.log("Ethereum object doesn't exist!")
       }
