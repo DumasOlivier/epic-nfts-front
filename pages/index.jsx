@@ -9,6 +9,8 @@ const Home = () => {
   const [isMining, setIsMining] = useState(false)
   const [trxAddress, setTrxAddress] = useState('')
   const [error, setError] = useState('')
+  const [nftOpenSeaAddress, setNftOpenSeaAddress] = useState('')
+  const CONTRACT_ADDRESS = '0x27F66Db115f74dbe351c6a51a3f44281A6Ffe2ea'
 
   useEffect(() => {
     checkIfWalletIsConnected()
@@ -75,12 +77,27 @@ const Home = () => {
           ) : trxAddress.length > 0 ? (
             <div>
               <h2 className="mt-5 text-3xl font-bold">
-                Congratulation, your NFT has been mined !
+                We've minted your NFT !
               </h2>
-              <p className="mt-5">Check your transaction here :</p>
+              <p className="mt-5">
+                We sent it to your wallet. It may be blank right now. It can
+                take a max of 10 min to show up on OpenSea.
+              </p>
+              <p className="mt-10 font-bold">Check your transaction here :</p>
               <p className="mt-3">
                 <a className="text-blue-500" href={trxAddress} target="_blank">
                   {trxAddress}
+                </a>
+              </p>
+
+              <p className="mt-10 font-bold">Check your beautiful NFT here :</p>
+              <p className="mt-3">
+                <a
+                  className="text-blue-500"
+                  href={nftOpenSeaAddress}
+                  target="_blank"
+                >
+                  {nftOpenSeaAddress}
                 </a>
               </p>
             </div>
@@ -121,8 +138,6 @@ const Home = () => {
   }
 
   const askContractToMintNft = async () => {
-    const CONTRACT_ADDRESS = '0x27F66Db115f74dbe351c6a51a3f44281A6Ffe2ea'
-
     try {
       const { ethereum } = window
 
@@ -154,14 +169,11 @@ const Home = () => {
     }
   }
 
-  // TODO: FIXME
   const setupEventListener = async () => {
-    // Most of this looks the same as our function askContractToMintNft
     try {
       const { ethereum } = window
 
       if (ethereum) {
-        // Same stuff again
         const provider = new ethers.providers.Web3Provider(ethereum)
         const signer = provider.getSigner()
         const connectedContract = new ethers.Contract(
@@ -170,13 +182,11 @@ const Home = () => {
           signer
         )
 
-        // THIS IS THE MAGIC SAUCE.
-        // This will essentially "capture" our event when our contract throws it.
-        // If you're familiar with webhooks, it's very similar to that!
+        // Listen to the event NewEpicNFTMinted.
         connectedContract.on('NewEpicNFTMinted', (from, tokenId) => {
           console.log(from, tokenId.toNumber())
-          alert(
-            `Hey there! We've minted your NFT and sent it to your wallet. It may be blank right now. It can take a max of 10 min to show up on OpenSea. Here's the link: https://testnets.opensea.io/assets/${CONTRACT_ADDRESS}/${tokenId.toNumber()}`
+          setNftOpenSeaAddress(
+            `https://testnets.opensea.io/assets/${CONTRACT_ADDRESS}/${tokenId.toNumber()}`
           )
         })
 
