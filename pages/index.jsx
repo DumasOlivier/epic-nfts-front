@@ -8,6 +8,7 @@ const Home = () => {
   const [currentAccount, setCurrentAccount] = useState('')
   const [isMining, setIsMining] = useState(false)
   const [trxAddress, setTrxAddress] = useState('')
+  const [error, setError] = useState('')
 
   useEffect(() => {
     checkIfWalletIsConnected()
@@ -43,6 +44,10 @@ const Home = () => {
         return
       }
 
+      if (error.length > 1) {
+        setError('')
+      }
+
       const accounts = await ethereum.request({ method: 'eth_requestAccounts' })
 
       console.log('Connected', accounts[0])
@@ -51,6 +56,7 @@ const Home = () => {
       setupEventListener()
     } catch (error) {
       console.log(error)
+      setError(`An error has occured, your NFT could not be created : ${error}`)
     }
   }
 
@@ -62,7 +68,9 @@ const Home = () => {
           <p className="text-green-500">You are logged in ! 🎉</p>
           {isMining ? (
             <p className="mt-5 text-2xl">
-              The transaction is being mined, please wait...
+              {error.length > 1
+                ? error
+                : 'The transaction is being mined, please wait...'}
             </p>
           ) : trxAddress.length > 0 ? (
             <div>
@@ -113,7 +121,7 @@ const Home = () => {
   }
 
   const askContractToMintNft = async () => {
-    const CONTRACT_ADDRESS = '0x13f664911180f50e9137a4e5d5E0b2b84C656a3F'
+    const CONTRACT_ADDRESS = '0x27F66Db115f74dbe351c6a51a3f44281A6Ffe2ea'
 
     try {
       const { ethereum } = window
@@ -189,9 +197,10 @@ const Home = () => {
       </Head>
 
       <main className="flex w-full flex-1 flex-col items-center justify-center px-20 text-center">
-        <h1 className="text-5xl font-bold">Lorem Ipsum NFTs</h1>
+        <h1 className="text-4xl font-bold">Lorem Ipsum NFTs</h1>
+        <h2 className="mt-3 text-2xl">On the Rinkeby network</h2>
 
-        <p className="mt-5 mb-5 text-2xl">
+        <p className="text-1xl mt-8 mb-5">
           Each unique. Each beautiful. Discover your NFT today.
         </p>
 
