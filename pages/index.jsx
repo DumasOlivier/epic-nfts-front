@@ -8,13 +8,25 @@ const Home = () => {
   const [currentAccount, setCurrentAccount] = useState('')
   const [isMining, setIsMining] = useState(false)
   const [trxAddress, setTrxAddress] = useState('')
+  const [openSeaNftAddress, setOpenSeaNftAddress] = useState('')
   const [error, setError] = useState('')
-  const [nftOpenSeaAddress, setNftOpenSeaAddress] = useState('')
   const CONTRACT_ADDRESS = '0x27F66Db115f74dbe351c6a51a3f44281A6Ffe2ea'
 
   useEffect(() => {
     checkIfWalletIsConnected()
   }, [])
+
+  const checkNetworkId = async () => {
+    let chainId = await ethereum.request({ method: 'eth_chainId' })
+
+    // String, hex code of the chainId of the Rinkebey test network
+    const rinkebyChainId = '0x4'
+    if (chainId !== rinkebyChainId) {
+      alert(
+        '👮 This app only works with the Rinkeby network, please change your Metamask settings.'
+      )
+    }
+  }
 
   const checkIfWalletIsConnected = async () => {
     const { ethereum } = window
@@ -54,6 +66,7 @@ const Home = () => {
 
       console.log('Connected', accounts[0])
       setCurrentAccount(accounts[0])
+      checkNetworkId()
 
       setupEventListener()
     } catch (error) {
@@ -67,7 +80,7 @@ const Home = () => {
     if (currentAccount.length > 0) {
       return (
         <div>
-          <p className="text-green-500">You are logged in ! 🎉</p>
+          <p className="mt-10 text-slate-700">You are logged in ! 🎉</p>
           {isMining ? (
             <p className="mt-5 text-2xl">
               {error.length > 1
@@ -77,34 +90,46 @@ const Home = () => {
           ) : trxAddress.length > 0 ? (
             <div>
               <h2 className="mt-5 text-3xl font-bold">
-                We've minted your NFT !
+                Congratulation, your NFT has been minted !
               </h2>
-              <p className="mt-5">
-                We sent it to your wallet. It may be blank right now. It can
-                take a max of 10 min to show up on OpenSea.
-              </p>
               <p className="mt-10 font-bold">Check your transaction here :</p>
-              <p className="mt-3">
-                <a className="text-blue-500" href={trxAddress} target="_blank">
-                  {trxAddress}
-                </a>
-              </p>
-
-              <p className="mt-10 font-bold">Check your beautiful NFT here :</p>
               <p className="mt-3">
                 <a
                   className="text-blue-500"
-                  href={nftOpenSeaAddress}
+                  href={trxAddress}
                   target="_blank"
+                  rel="noopener noreferrer"
                 >
-                  {nftOpenSeaAddress}
+                  {trxAddress}
                 </a>
               </p>
+              {openSeaNftAddress.length > 2 ? (
+                <>
+                  <p className="mt-10 font-bold">
+                    🔥🔥🔥 We've minted your NFT and sent it to your wallet.
+                    🔥🔥🔥
+                  </p>
+                  <p>
+                    It may be blank right now, it can take a max of 10 min to
+                    show up on OpenSea. Here's the link:
+                  </p>
+                  <a
+                    className="text-blue-500"
+                    href={openSeaNftAddress}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {openSeaNftAddress}
+                  </a>
+                </>
+              ) : (
+                ''
+              )}
             </div>
           ) : (
             <button
               onClick={() => askContractToMintNft()}
-              className="mt-5 rounded bg-green-500 py-2 px-4 font-bold text-white hover:bg-green-700"
+              className="mt-5 rounded bg-cyan-900 py-2 px-4 font-bold text-white hover:bg-cyan-700"
             >
               Mint a Lorem Ipsum NFT 🔥
             </button>
@@ -114,10 +139,10 @@ const Home = () => {
     } else {
       return (
         <button
-          className="mt-5 rounded bg-indigo-500 py-2 px-4 font-bold text-white hover:bg-indigo-700"
+          className="mt-5 rounded border border-slate-500 bg-transparent py-2 px-4 font-semibold text-slate-700 hover:border-transparent hover:bg-slate-500 hover:text-white"
           onClick={() => connectWallet()}
         >
-          Connect to Wallet
+          Connect to Metamask 🦊
         </button>
       )
     }
@@ -185,7 +210,7 @@ const Home = () => {
         // Listen to the event NewEpicNFTMinted.
         connectedContract.on('NewEpicNFTMinted', (from, tokenId) => {
           console.log(from, tokenId.toNumber())
-          setNftOpenSeaAddress(
+          setOpenSeaNftAddress(
             `https://testnets.opensea.io/assets/${CONTRACT_ADDRESS}/${tokenId.toNumber()}`
           )
         })
@@ -214,19 +239,23 @@ const Home = () => {
           Each unique. Each beautiful. Discover your NFT today.
         </p>
 
+        <a
+          href="https://testnets.opensea.io/collection/loremipsumnft-lu2fc2i7hq"
+          target="_blank"
+          className="mb-12 rounded bg-slate-900 py-2 px-4 font-bold text-white hover:bg-slate-700"
+          rel="noopener noreferrer"
+        >
+          Check the collection on Opensea
+        </a>
+
         {/* Add your render method here */}
         {hasMetamask ? renderNotConnectedContainer() : renderInstallMetamask()}
       </main>
 
       <footer className="flex h-24 w-full items-center justify-center border-t">
-        <a
-          className="flex items-center justify-center gap-2"
-          href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
+        <div className="flex items-center justify-center gap-2">
           NFT project
-        </a>
+        </div>
       </footer>
     </div>
   )
